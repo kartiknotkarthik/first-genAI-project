@@ -28,132 +28,123 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for Dashboard "Smart Home" Style with Zomato Branding
+# Custom CSS for the exact look from the screenshot
 st.markdown("""
 <style>
-    /* Main Background */
+    /* Dark Theme Base */
     .stApp {
-        background-color: #F7F7F7;
+        background-color: #0d1117;
+        color: #e6edf3;
     }
     
-    /* Global Card Style */
-    .block-card {
-        background: white;
-        border-radius: 24px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-        margin-bottom: 1rem;
-        border: none;
-    }
-
-    /* Left Sidebar Styling */
     [data-testid="stSidebar"] {
-        background-color: #111111 !important;
-        min-width: 350px !important;
+        background-color: #161b22;
+    }
+
+    /* Typography */
+    h1, h2, h3 {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: white !important;
     }
     
-    .sidebar-header {
-        background: linear-gradient(135deg, #E23744 0%, #FF5A66 100%);
-        padding: 2.5rem 1.5rem;
-        border-radius: 0 0 30px 30px;
-        margin: -1rem -1rem 2rem -1rem;
-        color: white;
-    }
-
-    /* Pill Buttons for Categories */
-    .pill {
-        background-color: white;
-        color: #111111;
-        padding: 8px 24px;
-        border-radius: 50px;
-        border: 1px solid #EEE;
+    .label-text {
+        font-size: 0.8rem;
         font-weight: 600;
-        display: inline-block;
-        margin: 4px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .pill.active {
-        background-color: #E23744;
-        color: white;
-        border-color: #E23744;
+        color: #8b949e;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
     }
 
-    /* Restaurant "Device" Blocks */
-    .rest-block {
-        background-color: #F0F0F0;
-        border-radius: 20px;
+    /* Input Styling */
+    .stTextArea textarea, .stTextInput input, .stSelectbox div[data-baseweb="select"] {
+        background-color: #0d1117 !important;
+        border: 1px solid #30363d !important;
+        border-radius: 8px !important;
+        color: white !important;
+    }
+    
+    /* Result Column Container */
+    .results-container {
+        background-color: #161b22;
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #30363d;
+        height: 85vh;
+        overflow-y: auto;
+    }
+
+    /* Restaurant Card */
+    .res-card {
+        background-color: #0d1117;
+        border-radius: 12px;
         padding: 1.2rem;
-        height: 180px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        border: 2px solid transparent;
-        transition: all 0.3s;
+        margin-bottom: 1rem;
+        border: 1px solid #30363d;
+        position: relative;
     }
-    .rest-block:hover {
-        background-color: white;
-        border-color: #E23744;
-        transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(226, 55, 68, 0.1);
-    }
-    .rest-block.active {
-        background: linear-gradient(135deg, #E23744 0%, #FF5A66 100%);
-        color: white !important;
-    }
-    .rest-block.active p, .rest-block.active h4 {
-        color: white !important;
-    }
-
-    /* Rating Circle */
-    .rating-circle {
-        width: 80px;
-        height: 80px;
-        border-radius: 50%;
-        border: 4px solid #FFD700;
+    
+    .rating-star {
+        position: absolute;
+        top: 1.2rem;
+        right: 1.2rem;
+        color: #e3b341;
+        font-weight: bold;
         display: flex;
         align-items: center;
-        justify-content: center;
-        margin: 0 auto;
-        font-weight: bold;
-        font-size: 1.2rem;
-        color: #111111;
-        background: white;
+        gap: 4px;
     }
 
-    /* Utility */
+    .cost-badge {
+        background-color: #21262d;
+        color: #e3b341;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        display: inline-block;
+        margin-top: 0.5rem;
+        border: 1px solid #30363d;
+    }
+
+    /* Buttons */
     .stButton>button {
-        border-radius: 12px !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        border-radius: 20px !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Recommendations Button Glow */
+    div.stButton > button:first-child[kind="primary"] {
+        background: linear-gradient(90deg, #ff7e67 0%, #ff512f 100%) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(255, 81, 47, 0.4) !important;
+        color: white !important;
+        padding: 0.6rem 2rem !important;
+    }
+    
+    div.stButton > button:first-child[kind="secondary"] {
+        background-color: #21262d !important;
+        color: #c9d1d9 !important;
+        border: 1px solid #30363d !important;
+    }
+
+    /* Custom labels like in photo */
+    .photo-label {
+        font-size: 0.7rem;
+        background: #21262d;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #8b949e;
+        border: 1px solid #30363d;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar - Dashboard Left Pane
-with st.sidebar:
-    st.markdown("""
-        <div class="sidebar-header">
-            <h4 style="margin:0; opacity:0.8">hi hunger!</h4>
-            <h1 style="margin:0; font-size:2.4rem">Welcome to <br>Zomato AI.</h1>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.subheader("Last Search Preference")
-    
-    # Simple Circular Gauge visualization for Budget
-    st.markdown(f"""
-        <div style="text-align:center; padding: 1rem; background:#222; border-radius:30px; margin-bottom: 2rem;">
-            <p style="color:#888; margin:0">MAX BUDGET</p>
-            <h2 style="color:#FFD700; margin:0.5rem 0">₹{max_budget if 'max_budget' in locals() else '2000'}</h2>
-            <div style="width:100%; height:4px; background:#444; border-radius:2px">
-                <div style="width:{((max_budget if 'max_budget' in locals() else 2000)-500)/1500*100}%; height:100%; background:#E23744; border-radius:2px"></div>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
+# Helper for labels
+def custom_label(text):
+    st.markdown(f'<p class="label-text">{text}</p>', unsafe_allow_html=True)
 
-    # Standalone manager
+# Sidebar (Hidden Data Controls)
+with st.sidebar:
+    st.header("Admin Controls")
     use_standalone = st.toggle("Standalone Mode", value=STANDALONE_SUPPORTED)
     if use_standalone:
         db_path = root_path / "phase1" / "zomato_phase1.sqlite"
@@ -169,16 +160,19 @@ with st.sidebar:
     else:
         backend_url = st.text_input("Backend URL", value="http://127.0.0.1:8000")
 
-# Main Application Logic
+# --- METADATA FETCHING ---
 available_cities = ["All"]
 available_cuisines = ["All"]
-if use_standalone and db_path.exists():
-    meta = get_metadata(db_url=f"sqlite:///{db_path}")
-    available_cities += meta.get("cities", [])
-    available_cuisines += meta.get("cuisines", [])
-elif not use_standalone:
+
+if use_standalone:
+    db_path = root_path / "phase1" / "zomato_phase1.sqlite"
+    if db_path.exists():
+        meta = get_metadata(db_url=f"sqlite:///{db_path}")
+        available_cities += meta.get("cities", [])
+        available_cuisines += meta.get("cuisines", [])
+else:
     try:
-        with httpx.Client(timeout=10.0) as client:
+        with httpx.Client(timeout=5.0) as client:
             resp = client.get(f"{backend_url}/api/metadata")
             if resp.status_code == 200:
                 meta = resp.json()
@@ -186,36 +180,56 @@ elif not use_standalone:
                 available_cuisines += meta.get("cuisines", [])
     except: pass
 
-# Top Search Bar
-st.markdown("### Search Preferences")
-q_col1, q_col2 = st.columns([3, 1])
-with q_col1:
-    query = st.text_input("What are you craving?", placeholder="e.g. Best pizza in Bangalore...", label_visibility="collapsed")
-with q_col2:
-    generate_btn = st.button("Find Restaurants", type="primary", use_container_width=True)
+# --- UI IMPLEMENTATION ---
+l_col, r_col = st.columns([1, 1], gap="large")
 
-# Main Dashboard Content
-content_left, content_right = st.columns([1.2, 3], gap="large")
-
-with content_left:
-    st.markdown("#### MY FILTERS")
-    with st.container(border=True):
-        city = st.selectbox("Current City", available_cities)
-        cuisine = st.selectbox("Favorite Cuisine", available_cuisines)
-        min_rating = st.slider("Minimum Rating", 0.0, 5.0, 3.5, 0.1)
-        max_budget = st.slider("Max Budget (INR)", 500, 2000, 2000, 100)
-        limit = st.select_slider("Results Limit", options=[5, 10, 15, 20], value=10)
+with l_col:
+    st.markdown("# Zomato-AI")
+    st.markdown("Tell us what you're craving and get tailored restaurant picks powered by Groq.", help="Powered by Groq LPU")
     
-    st.markdown("#### RATING GAUGE")
-    st.markdown(f"""
-        <div class="rating-circle">
-            {min_rating}★
-        </div>
-    """, unsafe_allow_html=True)
-
-with content_right:
-    st.markdown("#### DISCOVERY BLOCKS")
+    st.write("")
+    custom_label("WHAT ARE YOU IN THE MOOD FOR?")
+    query = st.text_area("craving", placeholder="good north indian biryani in bengaluru", label_visibility="collapsed", height=100)
     
+    row1_c1, row1_c2 = st.columns(2)
+    with row1_c1:
+        custom_label("CITY")
+        city = st.selectbox("city_sel", available_cities, label_visibility="collapsed")
+    with row1_c2:
+        custom_label("CUISINE")
+        cuisine = st.selectbox("cuisine_sel", available_cuisines, label_visibility="collapsed")
+        
+    row2_c1, row2_c2 = st.columns(2)
+    with row2_c1:
+        custom_label("MINIMUM RATING")
+        min_rating_val = st.selectbox("rating_sel", ["Any", "3.0+", "3.5+", "4.0+", "4.5+"], index=0, label_visibility="collapsed")
+        # Convert to float
+        min_rating = 0.0
+        if "3.0" in min_rating_val: min_rating = 3.0
+        elif "3.5" in min_rating_val: min_rating = 3.5
+        elif "4.0" in min_rating_val: min_rating = 4.0
+        elif "4.5" in min_rating_val: min_rating = 4.5
+        
+    with row2_c2:
+        budget_label = f"BUDGET (UP TO {st.session_state.get('budget_slider', 2000)} INR)"
+        custom_label(budget_label)
+        max_budget = st.slider("budget_slider", 500, 2000, 2000, 100, label_visibility="collapsed", key="budget_slider")
+        
+    custom_label("HOW MANY RESULTS?")
+    limit = st.selectbox("limit_sel", [5, 10, 15, 20], index=1, label_visibility="collapsed")
+    
+    st.write("")
+    btn_c1, btn_c2, btn_c3 = st.columns([1.5, 0.8, 1.2])
+    with btn_c1:
+        generate_btn = st.button("Get recommendations", type="primary", use_container_width=True)
+    with btn_c2:
+        if st.button("Reset", use_container_width=True):
+            st.rerun()
+    with btn_c3:
+        st.markdown('<p class="photo-label">Results received</p>', unsafe_allow_html=True)
+
+with r_col:
+    st.markdown('<div class="results-container">', unsafe_allow_html=True)
     if generate_btn:
         parts = []
         if query: parts.append(query)
@@ -250,32 +264,31 @@ with content_right:
                 if response.status_code == 200: results = response.json()
 
             if results:
-                st.markdown(f'<div class="explanation-box"><b>AI Reasoning:</b><br>{results.get("explanation", "")}</div>', unsafe_allow_html=True)
+                st.markdown(f"### Recommended for you <small style='float:right; font-size:0.8rem; color:#8b949e'>{len(results.get('restaurants', []))} result(s) shown.</small>", unsafe_allow_html=True)
+                st.markdown(f'<p style="color:#8b949e; font-size:0.9rem;">{results.get("explanation", "")}</p>', unsafe_allow_html=True)
                 
-                # Grid of Blocks
-                r_cols = st.columns(2)
-                for idx, rest in enumerate(results.get("restaurants", [])):
+                for rest in results.get("restaurants", []):
                     rate_val = rest.get('rate', '').split('/')[0].strip() if '/' in str(rest.get('rate')) else rest.get('rate')
-                    with r_cols[idx % 2]:
-                        # Cycle color logic: first one is "active" (red gradient)
-                        is_active = "active" if idx == 0 else ""
-                        st.markdown(f"""
-                        <div class="rest-block {is_active}">
-                            <div>
-                                <h4 style="margin:0; font-weight:bold">{rest.get('name', 'Unknown')}</h4>
-                                <p style="margin:0.2rem 0; font-size:0.8rem; opacity:0.8">{rest.get('cuisines', '')}</p>
-                            </div>
-                            <div style="display:flex; justify-content:space-between; align-items:center">
-                                <span style="font-weight:bold">₹{rest.get('approx_cost(for two people)', 'N/A')}</span>
-                                <span class="rating-badge">★ {rate_val}</span>
-                            </div>
+                    st.markdown(f"""
+                        <div class="res-card">
+                            <div class="rating-star">★ {rate_val}</div>
+                            <h4 style="margin:0; font-size:1.1rem">{rest.get('name', 'Unknown')}</h4>
+                            <p style="color:#8b949e; font-size:0.85rem; margin:0.3rem 0;">
+                                {rest.get('cuisines', '')} • {rest.get('location', rest.get('locality', ''))}
+                            </p>
+                            <div class="cost-badge">Approx Cost: {rest.get('approx_cost(for two people)', 'N/A')} INR</div>
                         </div>
-                        """, unsafe_allow_html=True)
-                        st.write("") # Spacer
+                    """, unsafe_allow_html=True)
         except Exception as e:
             st.error(f"Error: {str(e)}")
     else:
-        st.info("Choose your filters and click 'Find Restaurants' to see your Discovery Blocks.")
+        st.markdown("### Recommended for you")
+        st.info("Hit the 'Get recommendations' button to see AI-powered suggestions here.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# Footer
+st.divider()
+st.caption("© 2026 Zomato-AI | Powered by Groq LPU Infrencing")
 
 # Footer
 st.divider()
