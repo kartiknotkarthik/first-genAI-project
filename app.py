@@ -225,61 +225,61 @@ with col_results:
             parts.append(f"budget up to {max_budget} INR")
             
             user_message = ", ".join(parts)            
-                try:
-                    results = {}
-                    if use_standalone:
-                        # Direct call to logic
-                        import groq
-                        g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
-                        from orchestrator.groq_client import GroqClient
-                        client = GroqClient(api_key=g_key)
-                        
-                        req = RecommendationRequest(
-                            city=city if city != "All" else None,
-                            cuisine=cuisine if cuisine != "All" else None,
-                            min_rating=min_rating,
-                            max_price_range=max_budget,
-                            limit=limit
-                        )
-                        
-                        db_uri = f"sqlite:///{db_path}"
-                        res_list = get_recommendations(req, db_url=db_uri)
-                        explanation = generate_explanation(user_message, res_list, groq_client=client)
-                        results = {"restaurants": res_list, "explanation": explanation}
-                    else:
-                        payload = {"user_message": user_message, "limit": limit}
-                        with httpx.Client(timeout=60.0) as client:
-                            response = client.post(f"{backend_url}/api/recommendations", json=payload)
-                        if response.status_code == 200:
-                            results = response.json()
+            try:
+                results = {}
+                if use_standalone:
+                    # Direct call to logic
+                    import groq
+                    g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+                    from orchestrator.groq_client import GroqClient
+                    client = GroqClient(api_key=g_key)
+                    
+                    req = RecommendationRequest(
+                        city=city if city != "All" else None,
+                        cuisine=cuisine if cuisine != "All" else None,
+                        min_rating=min_rating,
+                        max_price_range=max_budget,
+                        limit=limit
+                    )
+                    
+                    db_uri = f"sqlite:///{db_path}"
+                    res_list = get_recommendations(req, db_url=db_uri)
+                    explanation = generate_explanation(user_message, res_list, groq_client=client)
+                    results = {"restaurants": res_list, "explanation": explanation}
+                else:
+                    payload = {"user_message": user_message, "limit": limit}
+                    with httpx.Client(timeout=60.0) as client:
+                        response = client.post(f"{backend_url}/api/recommendations", json=payload)
+                    if response.status_code == 200:
+                        results = response.json()
 
-                    if results:
-                        st.markdown("#### 🤖 Why these matches?")
-                        st.markdown(f'<div class="explanation-box">{results.get("explanation", "No explanation.")}</div>', unsafe_allow_html=True)
+                if results:
+                    st.markdown("#### 🤖 Why these matches?")
+                    st.markdown(f'<div class="explanation-box">{results.get("explanation", "No explanation.")}</div>', unsafe_allow_html=True)
+                    
+                    for rest in results.get("restaurants", []):
+                        rate_val = rest.get('rate', '')
+                        if isinstance(rate_val, str) and '/' in rate_val:
+                            rate_val = rate_val.split('/')[0].strip()
                         
-                        for rest in results.get("restaurants", []):
-                            rate_val = rest.get('rate', '')
-                            if isinstance(rate_val, str) and '/' in rate_val:
-                                rate_val = rate_val.split('/')[0].strip()
-                            
-                            st.markdown(f"""
-                            <div class="restaurant-card">
-                                <div style="display: flex; justify-content: space-between; align-items: start;">
-                                    <div>
-                                        <h3 style="margin: 0; font-size: 1.1rem;">{rest.get('name', 'Unknown')}</h3>
-                                        <p style="color: #E23744; margin: 0; font-size: 0.85rem;">{rest.get('cuisines', 'Cuisine')}</p>
-                                        <p style="color: #888; margin: 0; font-size: 0.8rem;">📍 {rest.get('location', rest.get('locality', ''))}</p>
-                                    </div>
-                                    <div style="text-align: right;">
-                                        <div class="rating-badge">★ {rate_val if rate_val else 'N/A'}</div>
-                                        <p style="margin: 0.2rem 0 0 0; font-weight: bold; font-size: 0.9rem;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
-                                    </div>
+                        st.markdown(f"""
+                        <div class="restaurant-card">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div>
+                                    <h3 style="margin: 0; font-size: 1.1rem;">{rest.get('name', 'Unknown')}</h3>
+                                    <p style="color: #E23744; margin: 0; font-size: 0.85rem;">{rest.get('cuisines', 'Cuisine')}</p>
+                                    <p style="color: #888; margin: 0; font-size: 0.8rem;">📍 {rest.get('location', rest.get('locality', ''))}</p>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="rating-badge">★ {rate_val if rate_val else 'N/A'}</div>
+                                    <p style="margin: 0.2rem 0 0 0; font-weight: bold; font-size: 0.9rem;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
                                 </div>
                             </div>
-                            """, unsafe_allow_html=True)
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-                    st.exception(e)
+                        </div>
+                        """, unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                st.exception(e)
     else:
         st.info("👈 Enter your preferences on the left and click 'Generate Recommendations' to see results here.")
 
