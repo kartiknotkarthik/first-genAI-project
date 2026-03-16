@@ -28,260 +28,254 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for Zomato Branding and Single Screen Layout
+# Custom CSS for Dashboard "Smart Home" Style with Zomato Branding
 st.markdown("""
 <style>
-    /* Global Styles */
-    .main {
-        background-color: #000000;
-        color: #FFFFFF;
-        padding-top: 1rem !important;
+    /* Main Background */
+    .stApp {
+        background-color: #F7F7F7;
     }
     
-    [data-testid="stHeader"] {
-        display: none;
-    }
-    
-    /* Minimize scrolling for the whole page */
-    .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 0rem !important;
-        max-height: 100vh;
-        overflow: hidden;
+    /* Global Card Style */
+    .block-card {
+        background: white;
+        border-radius: 24px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        margin-bottom: 1rem;
+        border: none;
     }
 
-    /* Column specific scrolling */
-    [data-testid="column"]:nth-child(2) {
-        max-height: 85vh;
-        overflow-y: auto;
-        padding-right: 10px;
-    }
-    
-    h1, h2, h3, h4 {
-        color: #FFFFFF !important;
-        font-family: 'Inter', sans-serif;
-        margin-bottom: 0.5rem !important;
-    }
-    
-    .stTextArea textarea {
+    /* Left Sidebar Styling */
+    [data-testid="stSidebar"] {
         background-color: #111111 !important;
-        color: #FFFFFF !important;
-        border: 1px solid #333 !important;
+        min-width: 350px !important;
     }
     
-    /* Zomato Red Buttons */
-    .stButton>button {
-        background-color: #E23744 !important;
-        color: white !important;
-        border: none !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
-        height: 3rem !important;
-        transition: all 0.3s ease;
+    .sidebar-header {
+        background: linear-gradient(135deg, #E23744 0%, #FF5A66 100%);
+        padding: 2.5rem 1.5rem;
+        border-radius: 0 0 30px 30px;
+        margin: -1rem -1rem 2rem -1rem;
+        color: white;
     }
-    
-    .stButton>button:hover {
-        background-color: #cb202d !important;
-        box-shadow: 0 4px 15px rgba(226, 55, 68, 0.4);
-    }
-    
-    /* Restaurant Cards */
-    .restaurant-card {
-        background-color: #111111;
-        border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 0.8rem;
-        border: 1px solid #222;
-        border-left: 4px solid #E23744;
-    }
-    
-    /* Yellow Ratings */
-    .rating-badge {
-        background-color: #FFD700;
-        color: #000000;
-        padding: 2px 8px;
-        border-radius: 4px;
-        font-weight: 900;
+
+    /* Pill Buttons for Categories */
+    .pill {
+        background-color: white;
+        color: #111111;
+        padding: 8px 24px;
+        border-radius: 50px;
+        border: 1px solid #EEE;
+        font-weight: 600;
         display: inline-block;
+        margin: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
     }
-    
-    .explanation-box {
-        background-color: #111111;
-        border-left: 4px solid #FFD700;
-        padding: 1rem;
-        border-radius: 4px;
-        margin-bottom: 1rem;
-        color: #EEE;
-        font-size: 0.95rem;
+    .pill.active {
+        background-color: #E23744;
+        color: white;
+        border-color: #E23744;
     }
-    
-    /* Slider/Select colors */
-    .stSlider [data-baseweb="slider"] {
-        color: #E23744 !important;
+
+    /* Restaurant "Device" Blocks */
+    .rest-block {
+        background-color: #F0F0F0;
+        border-radius: 20px;
+        padding: 1.2rem;
+        height: 180px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        border: 2px solid transparent;
+        transition: all 0.3s;
     }
-    .stSelectbox div[data-baseweb="select"] {
-        background-color: #111111 !important;
+    .rest-block:hover {
+        background-color: white;
+        border-color: #E23744;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(226, 55, 68, 0.1);
+    }
+    .rest-block.active {
+        background: linear-gradient(135deg, #E23744 0%, #FF5A66 100%);
+        color: white !important;
+    }
+    .rest-block.active p, .rest-block.active h4 {
+        color: white !important;
+    }
+
+    /* Rating Circle */
+    .rating-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 4px solid #FFD700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        font-weight: bold;
+        font-size: 1.2rem;
+        color: #111111;
+        background: white;
+    }
+
+    /* Utility */
+    .stButton>button {
+        border-radius: 12px !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# App branding - Very Compact
-t1, t2 = st.columns([0.1, 0.9])
-with t1:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/b/bd/Zomato_Logo.svg", width=60)
-with t2:
-    st.markdown("<h1 style='margin:0; padding:0; font-size: 2.2rem;'>Zomato <span style='color:#E23744'>AI</span></h1>", unsafe_allow_html=True)
-# Backend API Configuration
+# Sidebar - Dashboard Left Pane
 with st.sidebar:
-    st.image("https://upload.wikimedia.org/wikipedia/commons/b/bd/Zomato_Logo.svg", width=100)
-    st.header("Settings")
+    st.markdown("""
+        <div class="sidebar-header">
+            <h4 style="margin:0; opacity:0.8">hi hunger!</h4>
+            <h1 style="margin:0; font-size:2.4rem">Welcome to <br>Zomato AI.</h1>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Mode selection
-    use_standalone = st.toggle("Standalone Mode (Direct DB Access)", value=STANDALONE_SUPPORTED)
+    st.markdown("---")
+    st.subheader("Last Search Preference")
     
-    if not use_standalone:
-        backend_url = st.text_input("Backend API URL", value="http://127.0.0.1:8000")
-    else:
+    # Simple Circular Gauge visualization for Budget
+    st.markdown(f"""
+        <div style="text-align:center; padding: 1rem; background:#222; border-radius:30px; margin-bottom: 2rem;">
+            <p style="color:#888; margin:0">MAX BUDGET</p>
+            <h2 style="color:#FFD700; margin:0.5rem 0">₹{max_budget if 'max_budget' in locals() else '2000'}</h2>
+            <div style="width:100%; height:4px; background:#444; border-radius:2px">
+                <div style="width:{((max_budget if 'max_budget' in locals() else 2000)-500)/1500*100}%; height:100%; background:#E23744; border-radius:2px"></div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Standalone manager
+    use_standalone = st.toggle("Standalone Mode", value=STANDALONE_SUPPORTED)
+    if use_standalone:
         db_path = root_path / "phase1" / "zomato_phase1.sqlite"
         if not db_path.exists():
-            st.error("📂 Database not found!")
-            if st.button("Download & Initialize Data"):
-                with st.spinner("Downloading Zomato dataset (this may take a minute)..."):
+            if st.button("Download & Initialize Data", use_container_width=True):
+                with st.spinner("Initializing..."):
                     try:
-                        # Call the ingestion logic directly
                         sys.path.append(str(root_path / "phase1"))
                         from zomato_ingestion.ingest import ingest_dataset
                         ingest_dataset()
-                        st.success("Database initialized!")
                         st.rerun()
-                    except Exception as e:
-                        st.error(f"Failed to seed data: {e}")
-        else:
-            st.success("✅ Database Connected")
+                    except Exception as e: st.error(f"Error: {e}")
+    else:
+        backend_url = st.text_input("Backend URL", value="http://127.0.0.1:8000")
 
-    st.divider()
-    st.header("Search Filters")
-    
-    # Metadata fetching
-    available_cities = ["All"]
-    available_cuisines = ["All"]
-    
-    if use_standalone and db_path.exists():
-        meta = get_metadata(db_url=f"sqlite:///{db_path}")
-        available_cities += meta.get("cities", [])
-        available_cuisines += meta.get("cuisines", [])
-    elif not use_standalone:
-        try:
-            with httpx.Client(timeout=10.0) as client:
-                resp = client.get(f"{backend_url}/api/metadata")
-                if resp.status_code == 200:
-                    meta = resp.json()
-                    available_cities += meta.get("cities", [])
-                    available_cuisines += meta.get("cuisines", [])
-        except:
-            st.caption("⚠️ API Offline. Using manual inputs.")
+# Main Application Logic
+available_cities = ["All"]
+available_cuisines = ["All"]
+if use_standalone and db_path.exists():
+    meta = get_metadata(db_url=f"sqlite:///{db_path}")
+    available_cities += meta.get("cities", [])
+    available_cuisines += meta.get("cuisines", [])
+elif not use_standalone:
+    try:
+        with httpx.Client(timeout=10.0) as client:
+            resp = client.get(f"{backend_url}/api/metadata")
+            if resp.status_code == 200:
+                meta = resp.json()
+                available_cities += meta.get("cities", [])
+                available_cuisines += meta.get("cuisines", [])
+    except: pass
 
-    city = st.selectbox("Select City", available_cities)
-    cuisine = st.selectbox("Select Cuisine", available_cuisines)
-    min_rating = st.slider("Minimum Rating", 0.0, 5.0, 3.5, 0.1)
-    max_budget = st.slider("Max Budget for Two (INR)", 500, 2000, 2000, 100)
-    limit = st.select_slider("Results Limit", options=[5, 10, 15, 20], value=10)
-    
-    generate_btn = st.button("Generate Recommendations", type="primary", use_container_width=True)
+# Top Search Bar
+st.markdown("### Search Preferences")
+q_col1, q_col2 = st.columns([3, 1])
+with q_col1:
+    query = st.text_input("What are you craving?", placeholder="e.g. Best pizza in Bangalore...", label_visibility="collapsed")
+with q_col2:
+    generate_btn = st.button("Find Restaurants", type="primary", use_container_width=True)
 
-# Main Layout
-col_input, col_results = st.columns([1, 1.5], gap="large")
+# Main Dashboard Content
+content_left, content_right = st.columns([1.2, 3], gap="large")
 
-with col_input:
-    st.subheader("What are you in the mood for?")
-    query = st.text_area(
-        "Describe your craving...", 
-        placeholder="e.g., I want a rooftop place with great pasta in Delhi, preferably with high ratings.",
-        height=150,
-        label_visibility="collapsed"
-    )
+with content_left:
+    st.markdown("#### MY FILTERS")
+    with st.container(border=True):
+        city = st.selectbox("Current City", available_cities)
+        cuisine = st.selectbox("Favorite Cuisine", available_cuisines)
+        min_rating = st.slider("Minimum Rating", 0.0, 5.0, 3.5, 0.1)
+        max_budget = st.slider("Max Budget (INR)", 500, 2000, 2000, 100)
+        limit = st.select_slider("Results Limit", options=[5, 10, 15, 20], value=10)
     
-    st.markdown("---")
-    st.subheader("Fine-tune Filters")
-    city = st.selectbox("Select City", available_cities)
-    cuisine = st.selectbox("Select Cuisine", available_cuisines)
-    min_rating = st.slider("Minimum Rating", 0.0, 5.0, 3.5, 0.1)
-    max_budget = st.slider("Max Budget for Two (INR)", 500, 2000, 2000, 100)
-    limit = st.select_slider("Results Limit", options=[5, 10, 15, 20], value=10)
-    
-    generate_btn = st.button("Generate Recommendations", type="primary", use_container_width=True)
+    st.markdown("#### RATING GAUGE")
+    st.markdown(f"""
+        <div class="rating-circle">
+            {min_rating}★
+        </div>
+    """, unsafe_allow_html=True)
 
-with col_results:
+with content_right:
+    st.markdown("#### DISCOVERY BLOCKS")
+    
     if generate_btn:
-        if not query and city == "All" and cuisine == "All":
-            st.warning("Please provide some search criteria or a query.")
-        else:
-            # Construct the user message
-            parts = []
-            if query: parts.append(query)
-            if city != "All": parts.append(f"in city {city}")
-            if cuisine != "All": parts.append(f"serving {cuisine}")
-            if min_rating > 0: parts.append(f"at least {min_rating} stars")
-            parts.append(f"budget up to {max_budget} INR")
-            
-            user_message = ", ".join(parts)            
-            try:
-                results = {}
-                if use_standalone:
-                    # Direct call to logic
-                    import groq
-                    g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
-                    from orchestrator.groq_client import GroqClient
-                    client = GroqClient(api_key=g_key)
-                    
-                    req = RecommendationRequest(
-                        city=city if city != "All" else None,
-                        cuisine=cuisine if cuisine != "All" else None,
-                        min_rating=min_rating,
-                        max_price_range=max_budget,
-                        limit=limit
-                    )
-                    
-                    db_uri = f"sqlite:///{db_path}"
-                    res_list = get_recommendations(req, db_url=db_uri)
-                    explanation = generate_explanation(user_message, res_list, groq_client=client)
-                    results = {"restaurants": res_list, "explanation": explanation}
-                else:
-                    payload = {"user_message": user_message, "limit": limit}
-                    with httpx.Client(timeout=60.0) as client:
-                        response = client.post(f"{backend_url}/api/recommendations", json=payload)
-                    if response.status_code == 200:
-                        results = response.json()
+        parts = []
+        if query: parts.append(query)
+        if city != "All": parts.append(f"in city {city}")
+        if cuisine != "All": parts.append(f"serving {cuisine}")
+        if min_rating > 0: parts.append(f"at least {min_rating} stars")
+        parts.append(f"budget up to {max_budget} INR")
+        user_message = ", ".join(parts)            
+        
+        try:
+            results = {}
+            if use_standalone:
+                import groq
+                g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+                from orchestrator.groq_client import GroqClient
+                client = GroqClient(api_key=g_key)
+                req = RecommendationRequest(
+                    city=city if city != "All" else None,
+                    cuisine=cuisine if cuisine != "All" else None,
+                    min_rating=min_rating,
+                    max_price_range=max_budget,
+                    limit=limit
+                )
+                db_uri = f"sqlite:///{db_path}"
+                res_list = get_recommendations(req, db_url=db_uri)
+                explanation = generate_explanation(user_message, res_list, groq_client=client)
+                results = {"restaurants": res_list, "explanation": explanation}
+            else:
+                payload = {"user_message": user_message, "limit": limit}
+                with httpx.Client(timeout=60.0) as client:
+                    response = client.post(f"{backend_url}/api/recommendations", json=payload)
+                if response.status_code == 200: results = response.json()
 
-                if results:
-                    st.markdown("#### 🤖 Why these matches?")
-                    st.markdown(f'<div class="explanation-box">{results.get("explanation", "No explanation.")}</div>', unsafe_allow_html=True)
-                    
-                    for rest in results.get("restaurants", []):
-                        rate_val = rest.get('rate', '')
-                        if isinstance(rate_val, str) and '/' in rate_val:
-                            rate_val = rate_val.split('/')[0].strip()
-                        
+            if results:
+                st.markdown(f'<div class="explanation-box"><b>AI Reasoning:</b><br>{results.get("explanation", "")}</div>', unsafe_allow_html=True)
+                
+                # Grid of Blocks
+                r_cols = st.columns(2)
+                for idx, rest in enumerate(results.get("restaurants", [])):
+                    rate_val = rest.get('rate', '').split('/')[0].strip() if '/' in str(rest.get('rate')) else rest.get('rate')
+                    with r_cols[idx % 2]:
+                        # Cycle color logic: first one is "active" (red gradient)
+                        is_active = "active" if idx == 0 else ""
                         st.markdown(f"""
-                        <div class="restaurant-card">
-                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                <div>
-                                    <h3 style="margin: 0; font-size: 1.1rem;">{rest.get('name', 'Unknown')}</h3>
-                                    <p style="color: #E23744; margin: 0; font-size: 0.85rem;">{rest.get('cuisines', 'Cuisine')}</p>
-                                    <p style="color: #888; margin: 0; font-size: 0.8rem;">📍 {rest.get('location', rest.get('locality', ''))}</p>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="rating-badge">★ {rate_val if rate_val else 'N/A'}</div>
-                                    <p style="margin: 0.2rem 0 0 0; font-weight: bold; font-size: 0.9rem;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
-                                </div>
+                        <div class="rest-block {is_active}">
+                            <div>
+                                <h4 style="margin:0; font-weight:bold">{rest.get('name', 'Unknown')}</h4>
+                                <p style="margin:0.2rem 0; font-size:0.8rem; opacity:0.8">{rest.get('cuisines', '')}</p>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; align-items:center">
+                                <span style="font-weight:bold">₹{rest.get('approx_cost(for two people)', 'N/A')}</span>
+                                <span class="rating-badge">★ {rate_val}</span>
                             </div>
                         </div>
                         """, unsafe_allow_html=True)
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
-                st.exception(e)
+                        st.write("") # Spacer
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
     else:
-        st.info("👈 Enter your preferences on the left and click 'Generate Recommendations' to see results here.")
+        st.info("Choose your filters and click 'Find Restaurants' to see your Discovery Blocks.")
 
 # Footer
 st.divider()
