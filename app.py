@@ -88,15 +88,18 @@ with st.sidebar:
     st.header("Settings")
     
     # Prioritize st.secrets for BACKEND_URL
-    default_backend = "http://localhost:8000"
+    # 127.0.0.1 is often more stable than 'localhost' in Python network calls
+    default_backend = "http://127.0.0.1:8000"
     if "BACKEND_URL" in st.secrets:
         default_backend = st.secrets["BACKEND_URL"]
     
     backend_url = st.text_input("Backend API URL", value=default_backend, help="Endpoint of your FastAPI service")
     
-    # Check if we are likely on cloud and using localhost
-    if "localhost" in backend_url and not os.path.exists(".git"): # Heuristic for cloud
-        st.warning("⚠️ You appear to be running on the cloud but targeting 'localhost'. This will not work unless you use a tunnel like ngrok.")
+    # Check if we are likely on cloud and using a local address
+    is_local_address = "127.0.0.1" in backend_url or "localhost" in backend_url
+    if is_local_address and not os.path.exists(".git"): # Heuristic for cloud environment
+        st.error("🚫 **Cloud Connection Error**")
+        st.info("You are running on **Streamlit Cloud**, but your API URL is set to a local address. The cloud browser cannot see your laptop's 'localhost'.\n\n**To fix this:**\n1. Use a tool like **ngrok** on your laptop: `ngrok http 8000`\n2. Copy the public link and paste it above.")
 
     st.divider()
     st.header("Search Filters")
@@ -105,17 +108,24 @@ with st.sidebar:
     available_cities = ["All"]
     available_cuisines = ["All"]
     try:
-        with httpx.Client(timeout=10.0) as client:
+        # Use a longer timeout and specific transport if needed
+        with httpx.Client(timeout=15.0, follow_redirects=True) as client:
             resp = client.get(f"{backend_url}/api/metadata")
             if resp.status_code == 200:
                 meta = resp.json()
-                available_cities += meta.get("cities", [])
-                available_cuisines += meta.get("cuisines", [])
+                available_cities += meta.get("cities", [][0:0]) if isinstance(meta.get("cities"), list) else []
+                available_cuisines += meta.get("cuisines", [][0:0]) if isinstance(meta.get("cuisines"), list) else []
+                st.success("✅ Connected to Backend")
             else:
                 st.caption(f"⚠️ Backend returned status {resp.status_code}")
     except Exception as e:
-        st.caption(f"⚠️ Could not fetch metadata: {str(e)}")
-        st.info("Manual typing enabled.")
+        error_str = str(e)
+        if "99" in error_str or "address" in error_str.lower():
+            st.error("🚨 **Network Address Error (Errno 99)**")
+            st.warning("The app is unable to reach the backend at this address. If you're on a corporate network or Streamlit Cloud, localhost/127.0.0.1 won't work.")
+        else:
+            st.caption(f"⚠️ Connection Status: {error_str}")
+        st.info("Manual typing enabled in fields below.")
 
     city = st.selectbox("Select City", available_cities)
     cuisine = st.selectbox("Select Cuisine", available_cuisines)
