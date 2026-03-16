@@ -179,20 +179,20 @@ with l_col:
     
     st.write("")
     custom_label("WHAT ARE YOU IN THE MOOD FOR?")
-    query = st.text_area("craving", placeholder="pehle pet puja phir kaam duja", label_visibility="collapsed", height=100)
+    query = st.text_area("craving", placeholder="pehle pet puja phir kaam duja", label_visibility="collapsed", height=100, key="mood_query")
     
     row1_c1, row1_c2 = st.columns(2)
     with row1_c1:
         custom_label("CITY")
-        city = st.selectbox("city_sel", available_cities, label_visibility="collapsed")
+        city = st.selectbox("city_sel", available_cities, label_visibility="collapsed", key="city_sel")
     with row1_c2:
         custom_label("CUISINE")
-        cuisine = st.selectbox("cuisine_sel", available_cuisines, label_visibility="collapsed")
+        cuisine = st.selectbox("cuisine_sel", available_cuisines, label_visibility="collapsed", key="cuisine_sel")
         
     row2_c1, row2_c2 = st.columns(2)
     with row2_c1:
         custom_label("MINIMUM RATING")
-        min_rating_val = st.selectbox("rating_sel", ["Any", "3.0+", "3.5+", "4.0+", "4.5+"], index=0, label_visibility="collapsed")
+        min_rating_val = st.selectbox("rating_sel", ["Any", "3.0+", "3.5+", "4.0+", "4.5+"], index=0, label_visibility="collapsed", key="rating_sel")
         # Convert to float
         min_rating = 0.0
         if "3.0" in min_rating_val: min_rating = 3.0
@@ -206,7 +206,7 @@ with l_col:
         max_budget = st.slider("budget_slider", 500, 2000, 2000, 100, label_visibility="collapsed", key="budget_slider")
         
     custom_label("HOW MANY RESULTS?")
-    limit = st.selectbox("limit_sel", [5, 10, 15, 20], index=1, label_visibility="collapsed")
+    limit = st.selectbox("limit_sel", [5, 10, 15, 20], index=1, label_visibility="collapsed", key="limit_sel")
     
     # Dynamic Status state
     status_text = "Value empty"
@@ -219,7 +219,11 @@ with l_col:
         generate_btn = st.button("Get recommendations", type="primary", use_container_width=True)
     with btn_c2:
         if st.button("Reset", use_container_width=True):
-            if "results" in st.session_state: del st.session_state["results"]
+            # Clear all session state keys to reset inputs
+            keys_to_clear = ["mood_query", "city_sel", "cuisine_sel", "rating_sel", "budget_slider", "limit_sel", "results"]
+            for k in keys_to_clear:
+                if k in st.session_state:
+                    del st.session_state[k]
             st.rerun()
     with btn_c3:
         # This will be updated below if generate_btn is clicked
