@@ -189,7 +189,7 @@ with l_col:
     
     st.write("")
     custom_label("WHAT ARE YOU IN THE MOOD FOR?")
-    query = st.text_area("craving", placeholder="good north indian biryani in bengaluru", label_visibility="collapsed", height=100)
+    query = st.text_area("craving", placeholder="pehle pet puja phir kaam duja", label_visibility="collapsed", height=100)
     
     row1_c1, row1_c2 = st.columns(2)
     with row1_c1:
@@ -218,73 +218,100 @@ with l_col:
     custom_label("HOW MANY RESULTS?")
     limit = st.selectbox("limit_sel", [5, 10, 15, 20], index=1, label_visibility="collapsed")
     
+    # Dynamic Status state
+    status_text = "Value empty"
+    if "results" in st.session_state:
+        status_text = "Results received"
+
     st.write("")
     btn_c1, btn_c2, btn_c3 = st.columns([1.5, 0.8, 1.2])
     with btn_c1:
         generate_btn = st.button("Get recommendations", type="primary", use_container_width=True)
     with btn_c2:
         if st.button("Reset", use_container_width=True):
+            if "results" in st.session_state: del st.session_state["results"]
             st.rerun()
     with btn_c3:
-        st.markdown('<p class="photo-label">Results received</p>', unsafe_allow_html=True)
+        # This will be updated below if generate_btn is clicked
+        status_placeholder = st.empty()
+        status_placeholder.markdown(f'<p class="photo-label">{status_text}</p>', unsafe_allow_html=True)
 
 with r_col:
-    st.markdown('<div class="results-container">', unsafe_allow_html=True)
-    if generate_btn:
-        parts = []
-        if query: parts.append(query)
-        if city != "All": parts.append(f"in city {city}")
-        if cuisine != "All": parts.append(f"serving {cuisine}")
-        if min_rating > 0: parts.append(f"at least {min_rating} stars")
-        parts.append(f"budget up to {max_budget} INR")
-        user_message = ", ".join(parts)            
+    results_placeholder = st.empty()
+    with results_placeholder.container():
+        st.markdown('<div class="results-container">', unsafe_allow_html=True)
         
-        try:
-            results = {}
-            if use_standalone:
-                import groq
-                g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
-                from orchestrator.groq_client import GroqClient
-                client = GroqClient(api_key=g_key)
-                req = RecommendationRequest(
-                    city=city if city != "All" else None,
-                    cuisine=cuisine if cuisine != "All" else None,
-                    min_rating=min_rating,
-                    max_price_range=max_budget,
-                    limit=limit
-                )
-                db_uri = f"sqlite:///{db_path}"
-                res_list = get_recommendations(req, db_url=db_uri)
-                explanation = generate_explanation(user_message, res_list, groq_client=client)
-                results = {"restaurants": res_list, "explanation": explanation}
-            else:
-                payload = {"user_message": user_message, "limit": limit}
-                with httpx.Client(timeout=60.0) as client:
-                    response = client.post(f"{backend_url}/api/recommendations", json=payload)
-                if response.status_code == 200: results = response.json()
+        # If button clicked, update status and process
+        if generate_btn:
+            status_placeholder.markdown('<p class="photo-label">Loading...</p>', unsafe_allow_html=True)
+            
+            parts = []
+            if query: parts.append(query)
+            if city != "All": parts.append(f"in city {city}")
+            if cuisine != "All": parts.append(f"serving {cuisine}")
+            if min_rating > 0: parts.append(f"at least {min_rating} stars")
+            parts.append(f"budget up to {max_budget} INR")
+            user_message = ", ".join(parts)            
+            
+            try:
+                results = {}
+                if use_standalone:
+                    import groq
+                    g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
+                    from orchestrator.groq_client import GroqClient
+                    client = GroqClient(api_key=g_key)
+                    req = RecommendationRequest(
+                        city=city if city != "All" else None,
+                        cuisine=cuisine if cuisine != "All" else None,
+                        min_rating=min_rating,
+                        max_price_range=max_budget,
+                        limit=limit
+                    )
+                    db_uri = f"sqlite:///{db_path}"
+                    res_list = get_recommendations(req, db_url=db_uri)
+                    explanation = generate_explanation(user_message, res_list, groq_client=client)
+                    results = {"restaurants": res_list, "explanation": explanation}
+                else:
+                    payload = {"user_message": user_message, "limit": limit}
+                    with httpx.Client(timeout=60.0) as client:
+                        response = client.post(f"{backend_url}/api/recommendations", json=payload)
+                    if response.status_code == 200: results = response.json()
 
-            if results:
-                st.markdown(f"### Recommended for you <small style='float:right; font-size:0.8rem; color:#8b949e'>{len(results.get('restaurants', []))} result(s) shown.</small>", unsafe_allow_html=True)
-                st.markdown(f'<p style="color:#8b949e; font-size:0.9rem;">{results.get("explanation", "")}</p>', unsafe_allow_html=True)
-                
-                for rest in results.get("restaurants", []):
-                    rate_val = rest.get('rate', '').split('/')[0].strip() if '/' in str(rest.get('rate')) else rest.get('rate')
-                    st.markdown(f"""
-                        <div class="res-card">
-                            <div class="rating-star">★ {rate_val}</div>
-                            <h4 style="margin:0; font-size:1.1rem">{rest.get('name', 'Unknown')}</h4>
-                            <p style="color:#8b949e; font-size:0.85rem; margin:0.3rem 0;">
-                                {rest.get('cuisines', '')} • {rest.get('location', rest.get('locality', ''))}
-                            </p>
-                            <div class="cost-badge">Approx Cost: {rest.get('approx_cost(for two people)', 'N/A')} INR</div>
-                        </div>
-                    """, unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"Error: {str(e)}")
-    else:
-        st.markdown("### Recommended for you")
-        st.info("Hit the 'Get recommendations' button to see AI-powered suggestions here.")
-    st.markdown('</div>', unsafe_allow_html=True)
+                if results:
+                    st.session_state["results"] = results
+                    status_placeholder.markdown('<p class="photo-label">Results received</p>', unsafe_allow_html=True)
+            except Exception as e:
+                st.error(f"Error: {str(e)}")
+                status_placeholder.markdown('<p class="photo-label">Error</p>', unsafe_allow_html=True)
+
+        # Render Results from Session State
+        if "results" in st.session_state:
+            res = st.session_state["results"]
+            st.markdown(f"### Recommended for you <small style='float:right; font-size:0.8rem; color:#8b949e'>{len(res.get('restaurants', []))} result(s) shown.</small>", unsafe_allow_html=True)
+            
+            # User choice summary (1-2 lines)
+            summary = f"Searching for **{cuisine if cuisine != 'All' else 'any food'}** in **{city if city != 'All' else 'all cities'}** with a budget of ₹{max_budget}."
+            st.markdown(f'<p style="color:#e3b341; font-size:0.95rem; margin-bottom:1rem;">{summary}</p>', unsafe_allow_html=True)
+            
+            st.markdown(f'<p style="color:#8b949e; font-size:0.9rem; line-height:1.4;">{res.get("explanation", "")}</p>', unsafe_allow_html=True)
+            
+            for rest in res.get("restaurants", []):
+                rate_val = rest.get('rate', '').split('/')[0].strip() if '/' in str(rest.get('rate')) else rest.get('rate')
+                st.markdown(f"""
+                    <div class="res-card">
+                        <div class="rating-star">★ {rate_val}</div>
+                        <h4 style="margin:0; font-size:1.1rem">{rest.get('name', 'Unknown')}</h4>
+                        <p style="color:#8b949e; font-size:0.85rem; margin:0.3rem 0;">
+                            {rest.get('cuisines', '')} • {rest.get('location', rest.get('locality', ''))}
+                        </p>
+                        <div class="cost-badge">Approx Cost: {rest.get('approx_cost(for two people)', 'N/A')} INR</div>
+                    </div>
+                """, unsafe_allow_html=True)
+        else:
+            st.markdown("### Recommended for you")
+            st.info("Hit the 'Get recommendations' button to see AI-powered suggestions here.")
+            
+        st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.divider()
