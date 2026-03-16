@@ -86,8 +86,18 @@ st.markdown("### Discover your next favorite meal with AI-powered recommendation
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/b/bd/Zomato_Logo.svg", width=100)
     st.header("Settings")
-    backend_url = st.text_input("Backend API URL", value="http://localhost:8000", help="Endpoint of your FastAPI service")
     
+    # Prioritize st.secrets for BACKEND_URL
+    default_backend = "http://localhost:8000"
+    if "BACKEND_URL" in st.secrets:
+        default_backend = st.secrets["BACKEND_URL"]
+    
+    backend_url = st.text_input("Backend API URL", value=default_backend, help="Endpoint of your FastAPI service")
+    
+    # Check if we are likely on cloud and using localhost
+    if "localhost" in backend_url and not os.path.exists(".git"): # Heuristic for cloud
+        st.warning("⚠️ You appear to be running on the cloud but targeting 'localhost'. This will not work unless you use a tunnel like ngrok.")
+
     st.divider()
     st.header("Search Filters")
     
@@ -95,14 +105,17 @@ with st.sidebar:
     available_cities = ["All"]
     available_cuisines = ["All"]
     try:
-        with httpx.Client(timeout=5.0) as client:
+        with httpx.Client(timeout=10.0) as client:
             resp = client.get(f"{backend_url}/api/metadata")
             if resp.status_code == 200:
                 meta = resp.json()
                 available_cities += meta.get("cities", [])
                 available_cuisines += meta.get("cuisines", [])
+            else:
+                st.caption(f"⚠️ Backend returned status {resp.status_code}")
     except Exception as e:
-        st.caption("⚠️ Could not fetch metadata from backend. Using manual inputs.")
+        st.caption(f"⚠️ Could not fetch metadata: {str(e)}")
+        st.info("Manual typing enabled.")
 
     city = st.selectbox("Select City", available_cities)
     cuisine = st.selectbox("Select Cuisine", available_cuisines)
