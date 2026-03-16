@@ -63,13 +63,14 @@ st.markdown("""
         color: white !important;
     }
     
-    /* Result Column Container */
-    .results-container {
+    /* Result Column Container - only visible when results exist */
+    .results-box {
         background-color: #161b22;
         border-radius: 12px;
         padding: 1.5rem;
         border: 1px solid #30363d;
-        height: 85vh;
+        min-height: 200px;
+        max-height: 85vh;
         overflow-y: auto;
     }
 
@@ -239,8 +240,6 @@ with l_col:
 with r_col:
     results_placeholder = st.empty()
     with results_placeholder.container():
-        st.markdown('<div class="results-container">', unsafe_allow_html=True)
-        
         # If button clicked, update status and process
         if generate_btn:
             status_placeholder.markdown('<p class="photo-label">Loading...</p>', unsafe_allow_html=True)
@@ -286,6 +285,7 @@ with r_col:
 
         # Render Results from Session State
         if "results" in st.session_state:
+            st.markdown('<div class="results-box">', unsafe_allow_html=True)
             res = st.session_state["results"]
             st.markdown(f"### Recommended for you <small style='float:right; font-size:0.8rem; color:#8b949e'>{len(res.get('restaurants', []))} result(s) shown.</small>", unsafe_allow_html=True)
             
@@ -307,11 +307,10 @@ with r_col:
                         <div class="cost-badge">Approx Cost: {rest.get('approx_cost(for two people)', 'N/A')} INR</div>
                     </div>
                 """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.markdown("### Recommended for you")
             st.info("Hit the 'Get recommendations' button to see AI-powered suggestions here.")
-            
-        st.markdown('</div>', unsafe_allow_html=True)
 
 # Footer
 st.divider()
