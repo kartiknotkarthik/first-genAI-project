@@ -1,0 +1,14 @@
+{
+  "name": "zomato-ai-phase5-ui",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Phase 5 UI for Zomato-AI Restaurant Service",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "jest": "^29.7.0"
+  }
+}
+

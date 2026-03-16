@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Zomato-AI Restaurant Recommender</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        color-scheme: light dark;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        background: radial-gradient(circle at top, #1b2735, #090a0f);
+        color: #f7f7f7;
+      }
+      .app-shell {
+        max-width: 1100px;
+        width: 100%;
+        margin: 24px;
+        padding: 24px 28px;
+        border-radius: 18px;
+        background: rgba(10, 12, 20, 0.92);
+        box-shadow: 0 18px 45px rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.3fr);
+        gap: 24px;
+      }
+      @media (max-width: 900px) {
+        .app-shell {
+          grid-template-columns: 1fr;
+        }
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 1.7rem;
+        letter-spacing: 0.02em;
+      }
+      .subtitle {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 18px;
+      }
+      label {
+        display: block;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-bottom: 4px;
+        opacity: 0.85;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 9px 11px;
+        border-radius: 9px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(8, 9, 16, 0.9);
+        color: inherit;
+        font: inherit;
+        outline: none;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: #ff4b6a;
+        box-shadow: 0 0 0 1px rgba(255, 75, 106, 0.4);
+      }
+      textarea {
+        min-height: 72px;
+        resize: vertical;
+      }
+      .field-row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .field {
+        margin-bottom: 10px;
+      }
+      .button-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 4px;
+      }
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 9px 18px;
+        font: inherit;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.08s ease, box-shadow 0.08s ease,
+          background 0.2s ease;
+      }
+      .primary {
+        background: linear-gradient(135deg, #ff4b6a, #ff9068);
+        color: #fff;
+        box-shadow: 0 10px 25px rgba(255, 75, 106, 0.4);
+      }
+      .primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 30px rgba(255, 75, 106, 0.55);
+      }
+      .secondary {
+        background: rgba(23, 25, 38, 0.9);
+        color: #f5f5f7;
+      }
+      .pill {
+        border-radius: 999px;
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        background: rgba(20, 22, 33, 0.9);
+      }
+      .pill span {
+        opacity: 0.75;
+      }
+      .results-panel {
+        border-radius: 14px;
+        padding: 14px 14px 10px;
+        background: radial-gradient(circle at top left, #1f2937, #030712);
+        overflow: hidden;
+      }
+      .results-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      .results-header h2 {
+        margin: 0;
+        font-size: 1rem;
+      }
+      .status-text {
+        font-size: 0.78rem;
+        opacity: 0.75;
+      }
+      .explanation {
+        font-size: 0.85rem;
+        opacity: 0.9;
+        margin: 8px 0 10px;
+        line-height: 1.4;
+      }
+      .card-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+      .card {
+        border-radius: 10px;
+        padding: 10px 11px;
+        background: rgba(15, 17, 26, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        display: grid;
+        grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+        gap: 4px 10px;
+      }
+      .card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+      .card-meta {
+        font-size: 0.8rem;
+        opacity: 0.75;
+      }
+      .card-right {
+        text-align: right;
+        font-size: 0.8rem;
+      }
+      .tag-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 4px;
+      }
+      .tag {
+        border-radius: 999px;
+        padding: 2px 7px;
+        font-size: 0.7rem;
+        background: rgba(249, 115, 22, 0.16);
+      }
+      .error {
+        color: #fecaca;
+        font-size: 0.8rem;
+        margin-top: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app-shell">
+      <section>
+        <h1>Zomato-AI</h1>
+        <div class="subtitle">
+          Tell us what you’re craving and get tailored restaurant picks powered
+          by Groq.
+        </div>
+
+        <form id="preference-form" novalidate>
+          <div class="field">
+            <label for="freeText">What are you in the mood for?</label>
+            <textarea
+              id="freeText"
+              name="freeText"
+              placeholder="e.g. Cheap North Indian dinner in Delhi, at least 4.0 rating"
+            ></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="city">City</label>
+              <input
+                id="city"
+                name="city"
+                placeholder="Delhi, Mumbai, etc."
+                autocomplete="off"
+                list="cities"
+              />
+              <datalist id="cities"></datalist>
+            </div>
+            <div class="field">
+              <label for="cuisine">Cuisine</label>
+              <input
+                id="cuisine"
+                name="cuisine"
+                placeholder="North Indian, Italian, Chinese…"
+                autocomplete="off"
+                list="cuisines"
+              />
+              <datalist id="cuisines"></datalist>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="minRating">Minimum rating</label>
+              <select id="minRating" name="minRating">
+                <option value="">Any</option>
+                <option value="3.5">3.5+</option>
+                <option value="4.0">4.0+</option>
+                <option value="4.5">4.5+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="maxPrice">Budget (up to <span id="budget-value">2000</span> INR)</label>
+              <input 
+                type="range" 
+                id="maxPrice" 
+                name="maxPrice" 
+                min="500" 
+                max="2000" 
+                step="100" 
+                value="2000"
+              />
+            </div>
+          </div>
+            <div class="field">
+              <label for="limit">How many results?</label>
+              <select id="limit" name="limit">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="button-row">
+            <button type="submit" class="primary">
+              Get recommendations
+            </button>
+            <button type="button" id="reset-btn" class="secondary">
+              Reset
+            </button>
+            <div class="pill">
+              <span id="status-pill">Idle · not connected to backend yet</span>
+            </div>
+          </div>
+          <div id="form-error" class="error" aria-live="polite"></div>
+        </form>
+      </section>
+
+      <section class="results-panel">
+        <div class="results-header">
+          <h2>Recommended for you</h2>
+          <div class="status-text" id="results-status">No results yet.</div>
+        </div>
+        <div class="explanation" id="results-explanation">
+          When you request recommendations, this panel will show Groq’s
+          explanation and a ranked list of restaurants from the Zomato dataset.
+        </div>
+        <ul class="card-list" id="results-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./main.js"></script>
+  </body>
+  </html>
+
