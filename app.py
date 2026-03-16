@@ -28,71 +28,109 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS for a premium look
+# Custom CSS for Zomato Branding and Single Screen Layout
 st.markdown("""
 <style>
-    :root {
-        --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-        --card-bg: #1e293b;
-    }
-    
+    /* Global Styles */
     .main {
-        background-color: #0f172a;
-        color: #f8fafc;
+        background-color: #000000;
+        color: #FFFFFF;
+        padding-top: 1rem !important;
     }
     
-    .stTitle {
+    [data-testid="stHeader"] {
+        display: none;
+    }
+    
+    /* Minimize scrolling for the whole page */
+    .block-container {
+        padding-top: 1rem !important;
+        padding-bottom: 0rem !important;
+        max-height: 100vh;
+        overflow: hidden;
+    }
+
+    /* Column specific scrolling */
+    [data-testid="column"]:nth-child(2) {
+        max-height: 85vh;
+        overflow-y: auto;
+        padding-right: 10px;
+    }
+    
+    h1, h2, h3, h4 {
+        color: #FFFFFF !important;
         font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        background: var(--primary-gradient);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        font-size: 3rem !important;
-        padding-bottom: 2rem;
+        margin-bottom: 0.5rem !important;
     }
     
+    .stTextArea textarea {
+        background-color: #111111 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #333 !important;
+    }
+    
+    /* Zomato Red Buttons */
+    .stButton>button {
+        background-color: #E23744 !important;
+        color: white !important;
+        border: none !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        height: 3rem !important;
+        transition: all 0.3s ease;
+    }
+    
+    .stButton>button:hover {
+        background-color: #cb202d !important;
+        box-shadow: 0 4px 15px rgba(226, 55, 68, 0.4);
+    }
+    
+    /* Restaurant Cards */
     .restaurant-card {
-        background-color: var(--card-bg);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin-bottom: 1rem;
-        border: 1px solid #334155;
-        transition: transform 0.2s, border-color 0.2s;
+        background-color: #111111;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        border: 1px solid #222;
+        border-left: 4px solid #E23744;
     }
     
-    .restaurant-card:hover {
-        transform: translateY(-4px);
-        border-color: #6366f1;
-    }
-    
+    /* Yellow Ratings */
     .rating-badge {
-        background: var(--primary-gradient);
-        color: white;
-        padding: 0.2rem 0.6rem;
-        border-radius: 0.5rem;
-        font-weight: bold;
+        background-color: #FFD700;
+        color: #000000;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-weight: 900;
         display: inline-block;
     }
     
-    .price-tag {
-        color: #94a3b8;
-        font-size: 0.9rem;
+    .explanation-box {
+        background-color: #111111;
+        border-left: 4px solid #FFD700;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        color: #EEE;
+        font-size: 0.95rem;
     }
     
-    .explanation-box {
-        background-color: #1e293b;
-        border-left: 4px solid #6366f1;
-        padding: 1.5rem;
-        border-radius: 0 0.5rem 0.5rem 0;
-        margin-bottom: 2rem;
-        font-style: italic;
+    /* Slider/Select colors */
+    .stSlider [data-baseweb="slider"] {
+        color: #E23744 !important;
+    }
+    .stSelectbox div[data-baseweb="select"] {
+        background-color: #111111 !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# App branding
-st.title("Zomato AI")
-st.markdown("### Discover your next favorite meal with AI-powered recommendations")
+# App branding - Very Compact
+t1, t2 = st.columns([0.1, 0.9])
+with t1:
+    st.image("https://upload.wikimedia.org/wikipedia/commons/b/bd/Zomato_Logo.svg", width=60)
+with t2:
+    st.markdown("<h1 style='margin:0; padding:0; font-size: 2.2rem;'>Zomato <span style='color:#E23744'>AI</span></h1>", unsafe_allow_html=True)
 # Backend API Configuration
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/b/bd/Zomato_Logo.svg", width=100)
@@ -187,18 +225,15 @@ with col_results:
             parts.append(f"budget up to {max_budget} INR")
             
             user_message = ", ".join(parts)            
-            with st.spinner("🧠 Groq AI is analyzing the Zomato dataset..."):
                 try:
                     results = {}
                     if use_standalone:
                         # Direct call to logic
                         import groq
-                        # Use streamlit secrets if available
                         g_key = st.secrets.get("GROQ_API_KEY", os.getenv("GROQ_API_KEY"))
                         from orchestrator.groq_client import GroqClient
                         client = GroqClient(api_key=g_key)
                         
-                        # Phase 2 request
                         req = RecommendationRequest(
                             city=city if city != "All" else None,
                             cuisine=cuisine if cuisine != "All" else None,
@@ -207,7 +242,6 @@ with col_results:
                             limit=limit
                         )
                         
-                        # Phase 3 logic
                         db_uri = f"sqlite:///{db_path}"
                         res_list = get_recommendations(req, db_url=db_uri)
                         explanation = generate_explanation(user_message, res_list, groq_client=client)
@@ -218,39 +252,33 @@ with col_results:
                             response = client.post(f"{backend_url}/api/recommendations", json=payload)
                         if response.status_code == 200:
                             results = response.json()
-                        else:
-                            st.error(f"Backend Error: {response.status_code}")
 
                     if results:
-                        # Display AI Explanation
-                        st.markdown("#### 🤖 Why these recommendations?")
+                        st.markdown("#### 🤖 Why these matches?")
                         st.markdown(f'<div class="explanation-box">{results.get("explanation", "No explanation.")}</div>', unsafe_allow_html=True)
                         
-                        # Display Restaurants
-                        st.markdown("#### 📍 Top Match Restaurants")
                         for rest in results.get("restaurants", []):
                             rate_val = rest.get('rate', '')
                             if isinstance(rate_val, str) and '/' in rate_val:
                                 rate_val = rate_val.split('/')[0].strip()
                             
-                            with st.container():
-                                st.markdown(f"""
-                                <div class="restaurant-card">
-                                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                                        <div>
-                                            <h3 style="margin: 0;">{rest.get('name', 'Unknown')}</h3>
-                                            <p style="color: #6366f1; margin: 0.2rem 0;">{rest.get('cuisines', 'Cuisine')}</p>
-                                            <p class="price-tag">📍 {rest.get('location', rest.get('locality', ''))}, {rest.get('city', '')}</p>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div class="rating-badge">⭐ {rate_val if rate_val else 'N/A'}</div>
-                                            <p style="margin-top: 0.5rem; font-weight: bold;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
-                                        </div>
+                            st.markdown(f"""
+                            <div class="restaurant-card">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 1.1rem;">{rest.get('name', 'Unknown')}</h3>
+                                        <p style="color: #E23744; margin: 0; font-size: 0.85rem;">{rest.get('cuisines', 'Cuisine')}</p>
+                                        <p style="color: #888; margin: 0; font-size: 0.8rem;">📍 {rest.get('location', rest.get('locality', ''))}</p>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div class="rating-badge">★ {rate_val if rate_val else 'N/A'}</div>
+                                        <p style="margin: 0.2rem 0 0 0; font-weight: bold; font-size: 0.9rem;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
                                     </div>
                                 </div>
-                                """, unsafe_allow_html=True)
+                            </div>
+                            """, unsafe_allow_html=True)
                 except Exception as e:
-                    st.error(f"Service Error: {str(e)}")
+                    st.error(f"Error: {str(e)}")
                     st.exception(e)
     else:
         st.info("👈 Enter your preferences on the left and click 'Generate Recommendations' to see results here.")
