@@ -113,8 +113,8 @@ with st.sidebar:
             resp = client.get(f"{backend_url}/api/metadata")
             if resp.status_code == 200:
                 meta = resp.json()
-                available_cities += meta.get("cities", [][0:0]) if isinstance(meta.get("cities"), list) else []
-                available_cuisines += meta.get("cuisines", [][0:0]) if isinstance(meta.get("cuisines"), list) else []
+                available_cities += meta.get("cities", []) if isinstance(meta.get("cities"), list) else []
+                available_cuisines += meta.get("cuisines", []) if isinstance(meta.get("cuisines"), list) else []
                 st.success("✅ Connected to Backend")
             else:
                 st.caption(f"⚠️ Backend returned status {resp.status_code}")
@@ -127,88 +127,103 @@ with st.sidebar:
             st.caption(f"⚠️ Connection Status: {error_str}")
         st.info("Manual typing enabled in fields below.")
 
+# Main Layout
+col_input, col_results = st.columns([1, 1.5], gap="large")
+
+with col_input:
+    st.subheader("What are you in the mood for?")
+    query = st.text_area(
+        "Describe your craving...", 
+        placeholder="e.g., I want a rooftop place with great pasta in Delhi, preferably with high ratings.",
+        height=150,
+        label_visibility="collapsed"
+    )
+    
+    st.markdown("---")
+    st.subheader("Fine-tune Filters")
     city = st.selectbox("Select City", available_cities)
     cuisine = st.selectbox("Select Cuisine", available_cuisines)
-    
     min_rating = st.slider("Minimum Rating", 0.0, 5.0, 3.5, 0.1)
     max_budget = st.slider("Max Budget for Two (INR)", 500, 2000, 2000, 100)
     limit = st.select_slider("Results Limit", options=[5, 10, 15, 20], value=10)
+    
+    generate_btn = st.button("Generate Recommendations", type="primary", use_container_width=True)
 
-# Main query area
-query = st.text_area("What are you in the mood for?", placeholder="e.g., I want a rooftop place with great pasta in Delhi, preferably with high ratings.")
-
-if st.button("Generate Recommendations", type="primary", use_container_width=True):
-    if not query and city == "All" and cuisine == "All":
-        st.warning("Please provide some search criteria or a query.")
-    else:
-        # Construct the user message
-        parts = []
-        if query: parts.append(query)
-        if city != "All": parts.append(f"in city {city}")
-        if cuisine != "All": parts.append(f"serving {cuisine}")
-        if min_rating > 0: parts.append(f"at least {min_rating} stars")
-        parts.append(f"budget up to {max_budget} INR")
-        
-        user_message = ", ".join(parts)
-        
-        with st.spinner("🧠 Groq AI is analyzing the Zomato dataset..."):
-            try:
-                payload = {
-                    "user_message": user_message,
-                    "limit": limit
-                }
-                
-                with httpx.Client(timeout=60.0) as client:
-                    response = client.post(f"{backend_url}/api/recommendations", json=payload)
+with col_results:
+    if generate_btn:
+        if not query and city == "All" and cuisine == "All":
+            st.warning("Please provide some search criteria or a query.")
+        else:
+            # Construct the user message
+            parts = []
+            if query: parts.append(query)
+            if city != "All": parts.append(f"in city {city}")
+            if cuisine != "All": parts.append(f"serving {cuisine}")
+            if min_rating > 0: parts.append(f"at least {min_rating} stars")
+            parts.append(f"budget up to {max_budget} INR")
+            
+            user_message = ", ".join(parts)
+            
+            with st.spinner("🧠 Groq AI is analyzing the Zomato dataset..."):
+                try:
+                    payload = {
+                        "user_message": user_message,
+                        "limit": limit
+                    }
                     
-                if response.status_code == 200:
-                    data = response.json()
-                    
-                    # Display AI Explanation
-                    st.markdown("#### 🤖 Why these recommendations?")
-                    st.markdown(f'<div class="explanation-box">{data.get("explanation", "No explanation provided.")}</div>', unsafe_allow_html=True)
-                    
-                    # Display Restaurants
-                    st.markdown("#### 📍 Top Match Restaurants")
-                    
-                    restaurants = data.get("restaurants", [])
-                    if not restaurants:
-                        st.info("No restaurants found matching your criteria. Try widening your search!")
+                    with httpx.Client(timeout=60.0) as client:
+                        response = client.post(f"{backend_url}/api/recommendations", json=payload)
+                        
+                    if response.status_code == 200:
+                        data = response.json()
+                        
+                        # Display AI Explanation
+                        st.markdown("#### 🤖 Why these recommendations?")
+                        st.markdown(f'<div class="explanation-box">{data.get("explanation", "No explanation provided.")}</div>', unsafe_allow_html=True)
+                        
+                        # Display Restaurants
+                        st.markdown("#### 📍 Top Match Restaurants")
+                        
+                        restaurants = data.get("restaurants", [])
+                        if not restaurants:
+                            st.info("No restaurants found matching your criteria. Try widening your search!")
+                        else:
+                            for rest in restaurants:
+                                # Helper to format rating
+                                rate_val = rest.get('rate', '')
+                                if isinstance(rate_val, str) and '/' in rate_val:
+                                    rate_val = rate_val.split('/')[0].strip()
+                                
+                                with st.container():
+                                    st.markdown(f"""
+                                    <div class="restaurant-card">
+                                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                                            <div>
+                                                <h3 style="margin: 0;">{rest.get('name', 'Unknown Restaurant')}</h3>
+                                                <p style="color: #6366f1; margin: 0.2rem 0;">{rest.get('cuisines', 'Various Cuisines')}</p>
+                                                <p class="price-tag">📍 {rest.get('location', rest.get('locality', 'Various'))}, {rest.get('city', '')}</p>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <div class="rating-badge">⭐ {rate_val if rate_val else 'N/A'}</div>
+                                                <p style="margin-top: 0.5rem; font-weight: bold;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
+                                                <p style="font-size: 0.8rem; color: #94a3b8;">(for two)</p>
+                                            </div>
+                                        </div>
+                                        <hr style="border: 0.5px solid #334155; margin: 1rem 0;">
+                                        <div style="font-size: 0.9rem;">
+                                            <span>🛒 Order Online: <b>{rest.get('online_order', 'N/A')}</b></span>
+                                            <span style="margin-left: 2rem;">📅 Book Table: <b>{rest.get('book_table', 'N/A')}</b></span>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
                     else:
-                        for rest in restaurants:
-                            # Helper to format rating
-                            rate_val = rest.get('rate', '')
-                            if isinstance(rate_val, str) and '/' in rate_val:
-                                rate_val = rate_val.split('/')[0].strip()
-                            
-                            with st.container():
-                                st.markdown(f"""
-                                <div class="restaurant-card">
-                                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                                        <div>
-                                            <h3 style="margin: 0;">{rest.get('name', 'Unknown Restaurant')}</h3>
-                                            <p style="color: #6366f1; margin: 0.2rem 0;">{rest.get('cuisines', 'Various Cuisines')}</p>
-                                            <p class="price-tag">📍 {rest.get('location', rest.get('locality', 'Various'))}, {rest.get('city', '')}</p>
-                                        </div>
-                                        <div style="text-align: right;">
-                                            <div class="rating-badge">⭐ {rate_val if rate_val else 'N/A'}</div>
-                                            <p style="margin-top: 0.5rem; font-weight: bold;">₹{rest.get('approx_cost(for two people)', 'N/A')}</p>
-                                            <p style="font-size: 0.8rem; color: #94a3b8;">(for two)</p>
-                                        </div>
-                                    </div>
-                                    <hr style="border: 0.5px solid #334155; margin: 1rem 0;">
-                                    <div style="font-size: 0.9rem;">
-                                        <span>🛒 Order Online: <b>{rest.get('online_order', 'N/A')}</b></span>
-                                        <span style="margin-left: 2rem;">📅 Book Table: <b>{rest.get('book_table', 'N/A')}</b></span>
-                                    </div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                else:
-                    st.error(f"Error from backend API: {response.status_code}")
-                    st.json(response.json())
-            except Exception as e:
-                st.error(f"Could not connect to the backend API at {backend_url}. Please ensure your FastAPI server is running and accessible.")
-                st.exception(e)
+                        st.error(f"Error from backend API: {response.status_code}")
+                        st.json(response.json())
+                except Exception as e:
+                    st.error(f"Could not connect to the backend API at {backend_url}. Please ensure your FastAPI server is running and accessible.")
+                    st.exception(e)
+    else:
+        st.info("👈 Enter your preferences on the left and click 'Generate Recommendations' to see results here.")
 
 # Footer
 st.divider()
