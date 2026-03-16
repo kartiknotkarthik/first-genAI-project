@@ -63,17 +63,6 @@ st.markdown("""
         color: white !important;
     }
     
-    /* Result Column Container - only visible when results exist */
-    .results-box {
-        background-color: #161b22;
-        border-radius: 12px;
-        padding: 1.5rem;
-        border: 1px solid #30363d;
-        min-height: 200px;
-        max-height: 85vh;
-        overflow-y: auto;
-    }
-
     /* Restaurant Card */
     .res-card {
         background-color: #0d1117;
@@ -285,7 +274,6 @@ with r_col:
 
         # Render Results from Session State
         if "results" in st.session_state:
-            st.markdown('<div class="results-box">', unsafe_allow_html=True)
             res = st.session_state["results"]
             st.markdown(f"### Recommended for you <small style='float:right; font-size:0.8rem; color:#8b949e'>{len(res.get('restaurants', []))} result(s) shown.</small>", unsafe_allow_html=True)
             
@@ -307,15 +295,10 @@ with r_col:
                         <div class="cost-badge">Approx Cost: {rest.get('approx_cost(for two people)', 'N/A')} INR</div>
                     </div>
                 """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
         else:
             st.markdown("### Recommended for you")
             st.info("Hit the 'Get recommendations' button to see AI-powered suggestions here.")
 
 # Footer
 st.divider()
-st.caption("© 2026 Zomato-AI | Powered by Groq LPU Infrencing")
-
-# Footer
-st.divider()
-st.caption("Built for manual testing of the Zomato AI Service. Powered by Groq & Zomato Dataset.")
+st.caption("© 2026 Zomato-AI | Powered by Groq & Zomato Dataset")
